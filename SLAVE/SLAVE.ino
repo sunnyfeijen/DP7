@@ -3,13 +3,15 @@
 
 #define TRIGGER_PIN 12
 #define ECHO_PIN 11
-#define MAX_DISTANCE 100
+#define MAX_DISTANCE 350
 
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
 
 int x;
 long timeBypasser = 0;
 long timeFirstSignal = 0;
+int sensorDistance = 0;
+int prev;
 
 void setup() {
   Wire.begin(8);                // join i2c bus with address #8
@@ -18,23 +20,24 @@ void setup() {
 }
 
 void loop() {
+
+  prev = sensorDistance;
+  
   if (x == 1 && timeFirstSignal == 0){
     timeFirstSignal = millis();
 
     while(timeBypasser == 0){
+      prev = sensorDistance;
       unsigned int uS = sonar.ping(); // Send ping, get ping time in microseconds (uS).
-      int sensorDistance = (uS / US_ROUNDTRIP_CM);
-      if (sensorDistance > 0){
+      sensorDistance = (uS / US_ROUNDTRIP_CM);
+      if (prev - sensorDistance > 30){
         Serial.println(sensorDistance);
         timeBypasser = millis();
         int duration = (timeBypasser - timeFirstSignal);
-        Serial.print("Time Bypasser: ");
-        Serial.println(timeBypasser);
-        Serial.print("Time First Signal: ");
-        Serial.println(timeFirstSignal);
         Serial.print("Duration: ");
         Serial.println(duration);
       }
+      delay(50);
     }
     x = 0;
     timeFirstSignal = 0;
